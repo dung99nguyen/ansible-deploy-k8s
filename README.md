@@ -1,0 +1,6 @@
+- Deploy cluster k8s 1 registrydev - 1 master - 3 worker
+- Các hosts được lưu trữ trong inventory/default.yaml
+- Các biến được lưu trữ trong roles/install-k8s/defaults/main.yaml
+- Khi deploy cần chỉnh sửa lại IP trong file inventory/default.yaml cho phù hợp
+- Khi cấu hình nhiều hơn số node mặc định cần chỉnh sửa lại file cluster.yaml.j2 (mặc định 1 master - 3 worker)
+- khi gặp bug sử dụng -vvv để xem chi tiết lỗi

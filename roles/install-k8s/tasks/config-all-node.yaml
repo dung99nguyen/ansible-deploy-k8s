@@ -1,0 +1,54 @@
+---
+- name: Add hosts to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: |
+      10.10.11.141 k8sregistrydev
+      10.10.11.142 k8smtdev01
+      10.10.11.143 k8swkdev01
+      10.10.11.198 k8swkdev02
+      10.10.11.199 k8swkdev03
+      10.10.11.200 k8sclientdev
+      10.10.11.201 k8snfsdev
+      10.10.11.202 k8scicddev
+    owner: root
+    group: root
+    mode: '0644'
+- name: Increase processes
+  lineinfile:
+    path: /etc/security/limits.d/20-nproc.conf
+    line: |+
+      # k8s configuration
+      * soft nofile 1048576
+      * hard nproc 1048576
+    owner: root
+    group: root
+    mode: '0644'
+- name: disable swap on all hosts
+  shell: swapoff -a ; sed -i -e "s|^.* swap|#&|g" /etc/fstab
+- name: create logrorate
+  file:
+    path: /etc/logrotate.d/k8s
+    owner: root
+    group: root
+    mode: '0644'
+    state: touch
+- name: copy module.sh to server worker
+  ansible.builtin.template:
+    src: module.sh.j2
+    dest: /root/module.sh
+    owner: root
+    group: root
+    mode: '0755'
+- name: Load module to kernel
+  shell: /root/module.sh
+- name: create user rke on all hosts
+  user:
+    name: rke
+    password: rke
+    group: docker
+    uid: 1001
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+    update_password: on_create

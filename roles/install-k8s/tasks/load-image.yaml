@@ -1,0 +1,7 @@
+---
+- name: load image to registry server
+  ansible.builtin.template:
+    src: images.sh.j2
+    dest: /root/images.sh
+    mode: '0644'
+  when: inventory_hostname in groups['k8smtdev']

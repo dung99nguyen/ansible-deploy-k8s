@@ -1,0 +1,7 @@
+---
+- name: config file daemon.json on all nodes
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+  when: inventory_hostname in groups['k8swkdev']

@@ -1,0 +1,33 @@
+---
+  - name: Create user
+    hosts: k8snfsdev, k8scicddev, k8sclientdev
+    tasks:
+      - name: Create user rke
+        user:
+          name: rke
+          password: rke
+          group: docker
+          uid: 1001
+          generate_ssh_key: yes
+          ssh_key_bits: 2048
+          ssh_key_file: .ssh/id_rsa
+          update_password: on_create
+
+  - name: ssh private key
+    hosts: k8snfsdev
+    vars:
+      k8sclientdev: rke@10.10.11.200
+      k8scicddev: rke@10.10.11.202
+    tasks:
+      - name: ssh private key from k8smtdev to all server worker
+        shell: |
+          sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8sclientdev }}"
+          sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8scicddev }}"
+      
+  - name: Restart service
+    hosts: k8sclientdev, k8snfsdev
+    tasks:
+      - name: Restart service sshd
+        service:
+          name: sshd
+          state: restarted

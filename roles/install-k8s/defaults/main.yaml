@@ -1,0 +1,7 @@
+---
+repo_host: k8sregistrydev
+repo_port: 5000
+
+k8swkdev01: rke@10.10.11.200
+k8swkdev02: rke@10.10.11.201
+k8swkdev03: rke@10.10.11.202

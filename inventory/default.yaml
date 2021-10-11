@@ -1,0 +1,29 @@
+---
+k8smtdev:
+  hosts:
+    k8smtdev01:
+      ansible_host: 10.10.11.142
+      ansible_connection: ssh
+      ansible_user: root
+    k8sregistrydev:
+      ansible_host: 10.10.11.141
+      ansible_connection: ssh
+      ansible_user: root
+    k8sdev01:
+      nsible_host: 10.10.11.142
+      ansible_connection: ssh
+      ansible_user: rke
+k8swkdev:
+  hosts:
+    k8swkdev01:
+      ansible_host: 10.10.11.143
+      ansible_connection: ssh
+      ansible_user: root
+    k8swkdev02:
+      ansible_host: 10.10.11.198
+      ansible_connection: ssh
+      ansible_user: root
+    k8swkdev03:
+      ansible_host: 10.10.11.199
+      ansible_connection: ssh
+      ansible_user: root

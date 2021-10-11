@@ -1,0 +1,5 @@
+---
+- name: Restart service sshd on all hosts
+  service:
+    name: sshd
+    state: restarted

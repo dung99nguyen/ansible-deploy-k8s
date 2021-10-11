@@ -1,0 +1,43 @@
+---
+  - name: Add hostname to hosts
+    hosts: k8sclientdev
+    tasks:
+      - name: Add hosts to /etc/hosts
+        lineinfile:
+          path: /etc/hosts
+          line: |
+            10.10.11.201 k8snfsdev
+            10.10.11.202 k8scicddev
+          owner: root
+          group: root
+          mode: '0644'
+      - name: Increase processes
+        lineinfile:
+          path: /etc/security/limits.d/20-nproc.conf
+          line: |+
+            # k8s configuration
+            * soft nofile 1048576
+            * hard nproc 1048576
+          owner: root
+          group: root
+          mode: '0644'
+      - name: Disable swap on all server
+        shell: swapoff -a ; sed -i -e "s|^.* swap|#&|g" /etc/fstab
+      - name: Create logrorate
+        file:
+          path: /etc/logrotate.d/k8s
+          owner: root
+          group: root
+          mode: '0644'
+          state: touch
+      - name: Copy module.sh to server worker
+        copy:
+          src: /root/Ansible/K8s/module.sh
+          dest: /root/
+          owner: root
+          group: root
+          mode: '0755'
+          follow: yes
+      - name: Load module to kernel
+        shell: /root/Ansible/K8s/module.sh
+        

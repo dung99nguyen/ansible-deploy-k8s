@@ -1,0 +1,7 @@
+- name: Copy tool kubectl
+  copy:
+    src: /root/k8s/tool/
+    dest: /usr/local/bin
+    owner: rke
+    group: docker
+    mode: '0744'

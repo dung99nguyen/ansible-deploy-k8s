@@ -1,0 +1,147 @@
+---
+  - name: Install registry on server k8sregistrydev
+    hosts: k8sregistrydev
+    tasks:
+      - name: Copy package to server k8snfsdev
+        copy:
+          src: /root/Ansible/K8s/images/
+          dest: /root/k8s/images
+          follow: yes
+      - name: Install docker registry
+        args:
+          chdir: /root/k8s/images
+        command: "docker load -i registry.tar.gz"
+      - name: Run images k8sregistrydev:5000
+        command: "docker run -d -p 5000:5000 --restart=always --name registry registry:2"
+
+  - name: Config file daemon.json on workers
+    hosts: k8smtdev01, k8swkdev01, k8swkdev02, k8swkdev03
+    tasks:
+      ansible.builtin.template:
+        src: daemon.json.j2
+        dest: /etc/docker/daemon.json
+        mode: 0644
+        state: absent
+    
+  - name: Load images to registry docker
+    hosts: k8sregistrydev
+    tasks:
+      - name: Load images to registry
+        shell: /root/k8s/images/images.sh
+
+  - name: Config node on cluster k8s
+    hosts: k8smtdev01, k8swkdev01, k8swkdev02, k8swkdev03
+    tasks:
+      - name: Add hosts to /etc/hosts
+        lineinfile:
+          path: /etc/hosts
+          line: |
+            10.10.11.141 k8sregistrydev
+            10.10.11.142 k8smtdev01
+            10.10.11.143 k8swkdev01
+            10.10.11.198 k8swkdev02
+            10.10.11.199 k8swkdev03
+            10.10.11.200 k8sclientdev
+            10.10.11.201 k8snfsdev
+            10.10.11.202 k8scicddev
+          owner: root
+          group: root
+          mode: '0644'
+      - name: Increase processes
+        lineinfile:
+          path: /etc/security/limits.d/20-nproc.conf
+          line: |+
+            # k8s configuration
+            * soft nofile 1048576
+            * hard nproc 1048576
+          owner: root
+          group: root
+          mode: '0644'
+      - name: Disable swap on all server
+        shell: swapoff -a ; sed -i -e "s|^.* swap|#&|g" /etc/fstab
+      - name: Create logrorate
+        file:
+          path: /etc/logrotate.d/k8s
+          owner: root
+          group: root
+          mode: '0644'
+          state: touch
+      - name: Copy module.sh to server worker
+        copy:
+          src: /root/Ansible/K8s/module.sh
+          dest: /root/
+          owner: root
+          group: root
+          mode: '0755'
+          follow: yes
+      - name: Load module to kernel
+        shell: /root/Ansible/K8s/module.sh
+    
+  - name: Create user rke on all nodes
+    hosts: k8smtdev01, k8swkdev01, k8swkdev02, k8swkdev03
+    tasks:
+      - name: Create user rke
+        user:
+          name: rke
+          password: rke
+          group: docker
+          uid: 1001
+          generate_ssh_key: yes
+          ssh_key_bits: 2048
+          ssh_key_file: .ssh/id_rsa
+          update_password: on_create
+
+  - name: ssh private key from node mater to node workers
+    hosts: k8smtdev01
+    vars:
+      k8swkdev01: rke@10.10.11.143
+      k8swkdev02: rke@10.10.11.198
+      k8swkdev03: rke@10.10.11.199
+    tasks:
+      - name: ssh private key from k8smtdev to all server worker
+        shell: |
+          sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev01 }}"
+          sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev02 }}"
+          sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev03 }}"
+
+  - name: Restart service sshd on all nodes
+    hosts: k8smtdev01, k8swkdev01, k8swkdev02, k8swkdev03
+    tasks:
+      - name: Restart service sshd
+        service:
+          name: sshd
+          state: restarted
+
+  - name: Install RKE on node mater
+    hosts: k8smtdev01
+    tasks:
+      - name: Copy tool kubectl
+        copy:
+          src: /root/Ansible/K8s/kubectl
+          dest: /usr/local/bin
+          owner: rke
+          group: docker
+          mode: '0744'
+      - name: Copy tool rke
+        copy:
+          src: /root/Ansible/K8s/rke
+          dest: /usr/local/bin
+          owner: rke
+          group: docker
+          mode: '0744'
+
+  - name:
+    hosts: k8smtdev01
+    tasks:
+      - name: Config file cluster.yml k8s
+        copy:
+          src: /root/Ansible/K8s/cluster.yml
+          dest: /home/rke/
+          owner: rke
+          group: docker
+          mode: '0644'
+        shell: rke up
+      - name: Create folder .kube
+        shell: |
+          mkdir .kube
+          cp kube_config_cluster.yml .kube/config

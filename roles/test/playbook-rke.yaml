@@ -1,0 +1,27 @@
+---
+  - name: Install RKE on mater server
+    hosts: k8snfsdev
+    tasks:
+      - name: Copy tool kubectl
+        copy:
+          src: /root/Ansible/K8s/kubectl
+          dest: /usr/local/bin
+          owner: rke
+          group: docker
+          mode: '0744'
+      - name: Copy tool rke
+        copy:
+          src: /root/Ansible/K8s/rke
+          dest: /usr/local/bin
+          owner: rke
+          group: docker
+          mode: '0744'    
+  - name: Config rke
+    hosts: k8snfsdev1
+    tasks:
+      - name: Config cluster k8s using rke
+        shell: rke up
+      - name: Create folder .kube
+        shell: |
+          mkdir .kube
+          cp kube_config_cluster.yml .kube/config

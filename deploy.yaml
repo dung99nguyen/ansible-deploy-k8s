@@ -1,0 +1,64 @@
+---
+- hosts: k8sregistrydev
+  gather_facts: no 
+  tasks: 
+    - name: install on registry server
+      include_role:
+        name: install-k8s
+        tasks_from: registry.yaml
+
+- hosts: k8swkdev01, k8swkdev02, k8swkdev03, k8smtdev
+  gather_facts: no
+  tasks:
+    - name: config daemon.json on all hosts
+      include_role:
+        name: install-k8s
+        tasks_from: daemon.yaml
+
+- hosts: k8sregistrydev
+  gather_facts: no
+  tasks:
+    - name: load image on registry server
+      include_role:
+        name: install-k8s
+        tasks_from: load-image.yaml
+
+- hosts: k8swkdev01, k8swkdev02, k8swkdev03, k8smtdev
+  gather_facts: no
+  tasks:
+    - name: config on all hosts
+      include_role:
+        name: install-k8s
+        tasks_from: config-all-node.yaml
+
+- hosts: k8sdev01
+  gather_facts: no
+  tasks:
+    - name: config ssh
+      include_role:
+        name: install-k8s
+        tasks_from: config-ssh.yaml
+
+- hosts: k8swkdev01, k8swkdev02, k8swkdev03, k8smtdev
+  gather_facts: no
+  tasks:
+    - name: restart sshd on all hosts
+      include_role:
+        name: install-k8s
+        tasks_from: restart-service-sshd.yaml
+
+- hosts: k8smtdev01
+  gather_facts: no
+  tasks:
+    - name: install tool rke & kubectl
+      include_role:
+        name: install-k8s
+        tasks_from: install-rke-kubectl.yaml
+
+- hosts: k8sdev01
+  gather_facts: no
+  tasks:
+    - name: config cluster k8s
+      include_role:
+        name: install-k8s
+        tasks_from: config-cluster-k8s.yaml

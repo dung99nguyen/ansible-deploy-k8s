@@ -1,0 +1,7 @@
+---
+- name: configure ssh from k8smtdev to all worker hosts
+  when: inventory_hostname in groups['k8smtdev']
+  shell: |
+    sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev01 }}"
+    sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev02 }}"
+    sshpass -p rke ssh-copy-id -i /home/rke/.ssh/id_rsa.pub "{{ k8swkdev03 }}"

@@ -1,0 +1,19 @@
+---
+- name: config file cluster for cluster k8s
+  ansible.builtin.template:
+    src: cluster.yaml.j2
+    dest: /home/rke/cluster.yml
+    mode: '0644'
+  when: inventory_hostname in groups['k8smtdev']
+- name: 
+  shell: 'rke up'
+- name: create folder kube
+  ansible.builtin.file:
+    path: /home/rke/.kube
+    owner: rke
+    group: docker
+    mode: '0755'
+    state: directory
+- name:
+  shell:
+    cp kube_config_cluster.yml .kube/config

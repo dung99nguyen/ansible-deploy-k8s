@@ -1,0 +1,26 @@
+---
+  - name: Install docker
+    hosts: k8snfsdev
+    tasks: 
+      - name: Copy package install docker to k8snfsdev
+        copy:
+          src: /root/Ansible/Docker/docker
+          dest: /root/
+          follow: yes
+      - name: Create repository for docker local
+        command: createrepo  /root/docker
+      - name: Create repo
+        yum_repository:
+          name: docker
+          description: Repo local
+          baseurl: "file:///root/docker"
+          enabled: yes
+          gpgcheck: no
+      - name: Yum docker local
+        yum:
+          name: docker-ce, docker-ce-cli, containerd.io
+          state: present
+      - name: Start docker services
+        service:
+          name: docker
+          state: started

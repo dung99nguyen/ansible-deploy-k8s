@@ -1,0 +1,11 @@
+---
+  - name: Install images on registry
+    hosts: k8snfsdev
+    tasks:
+      - name: Install registry server
+        docker_image:
+          path: /root/k8s/images
+          name: k8sregistrydev:5000/registry
+          tag: 2
+          push: yes
+          load_path: registry.tar.gz
